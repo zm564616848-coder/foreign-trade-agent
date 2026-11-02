@@ -50,6 +50,16 @@ test('Tongzhi selection queries the provider and returns its real source and eve
   assert.equal(result.events.length, 2);
   assert.equal(result.status, 'InTransit');
 });
+test('FedEx selection specifies its carrier code for registration and lookup', async () => {
+  const actions = [];
+  const track = createTrackingService({ apiKey: 'test-only', fetchImpl: async (url, init) => {
+    assert.deepEqual(JSON.parse(init.body), [{ number: 'TEST123456', carrier: 100003 }]);
+    actions.push(url.split('/').pop());
+    return reply({ accepted: url.endsWith('/register') ? [{ number: 'TEST123456' }] : [], rejected: [] });
+  } });
+  await track({ carrier: 'fedex', number: 'TEST123456' });
+  assert.deepEqual(actions, ['gettrackinfo', 'register', 'gettrackinfo']);
+});
 test('new shipment registers then queries; pending data does not invent events', async () => {
   const calls = [];
   const track = createTrackingService({ apiKey: 'test-only', fetchImpl: async url => {
