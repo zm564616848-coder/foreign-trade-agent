@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#172a29"><title>LogiHub · 全球物流查询工作台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23128b75'/%3E%3Cpath d='M11 10v20h19v-6H17V10z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css"><script type="module" src="./app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="#" class="brand"><span class="brand-icon">L<span>↗</span></span>LogiHub<span class="brand-dot">.</span></a>
+    <div class="workspace"><span class="workspace-icon">贸</span><div>外贸工作空间<small>GLOBAL LOGISTICS</small></div><span class="workspace-check">⌄</span></div>
+    <div class="nav-label">工作台 / WORKSPACE</div>
+    <nav aria-label="主导航">
+      <button class="nav-item active" data-view="directory"><span>▦</span>物流查询<span class="nav-arrow">↗</span></button>
+      <button class="nav-item" data-view="shipments"><span>▤</span>我的运单<span id="shipment-count" class="nav-count">0</span></button>
+      <button class="nav-item" data-view="favorites"><span>☆</span>常用物流</button>
+    </nav>
+    <div class="sidebar-note"><span class="globe">◎</span><strong>连接世界每一程</strong><p>海运、快递与双清专线<br>让物流查询更简单。</p><div class="route-art">○ ┄ ┄ ┄ ┄ ◇</div></div>
+    <div class="sidebar-bottom"><span class="avatar">W</span><div>我的工作台<small>本地个人空间</small></div><span class="online-dot"></span></div>
+  </aside>
+  <div class="layout">
+    <header class="topbar"><div>工作台 <span>/</span> <strong id="breadcrumb">物流查询</strong></div><div class="topbar-right"><span class="local-badge"><i></i> 本地数据存储</span><button id="help-button" class="icon-button" aria-label="使用说明">?</button></div></header>
+    <main>
+      <div class="page-heading"><div class="eyebrow">YOUR GLOBAL LOGISTICS DESK</div><div class="heading-row"><div><h1 id="page-title">每一程物流，尽在掌握<span>.</span></h1><p id="page-subtitle">汇集全球物流查询入口，让每一次追踪都更高效。</p></div><span class="heading-label">跨越山海 · 连接全球 ↗</span></div></div>
+      <section class="query-panel" aria-labelledby="query-title">
+        <div class="query-copy"><span class="pill">QUICK TRACK</span><h2 id="query-title">货物到哪了？<br>从这里开始查询。</h2><p>提单号 / 集装箱号 / 快递单号</p><div class="query-decoration" aria-hidden="true">↗</div></div>
+        <form id="tracking-form">
+          <div class="form-top"><h3>快速查询</h3><span>01 — 选择物流商，输入单号</span></div>
+          <div class="query-fields"><label>物流服务商<select id="carrier-select" required><option value="">请选择物流服务商</option></select></label><label class="tracking-label">物流单号<textarea id="tracking-input" rows="1" placeholder="输入单号，多个单号用空格或换行分隔" required maxlength="1100"></textarea></label><button class="primary-button" type="submit">查询物流 <span>↗</span></button></div>
+          <div class="form-bottom"><span>ⓘ 单个单号自动打开官网；若未打开，请点击弹窗内的查询链接。</span><span>支持批量添加</span></div>
+          <p id="form-error" class="form-error" role="alert"></p>
+        </form>
+      </section>
+      <section class="stats" aria-label="物流目录统计">
+        <div><span class="stat-icon">▧</span><div><span>海运服务商</span><strong>10 <small>家</small></strong></div><span class="stat-detail">OCEAN FREIGHT</span></div>
+        <div><span class="stat-icon">✈</span><div><span>国际快递</span><strong>5 <small>家</small></strong></div><span class="stat-detail">EXPRESS DELIVERY</span></div>
+        <div><span class="stat-icon">▱</span><div><span>双清专线</span><strong>4 <small>家</small></strong></div><span class="stat-detail">CUSTOMS & DELIVERY</span></div>
+      </section>
+      <section class="directory-section"><div class="section-heading"><div><h2 id="section-title">物流服务商</h2><span id="result-count">19 个查询入口</span></div><label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="搜索物流商名称…" aria-label="搜索物流商或运单"></label></div>
+        <div class="filter-bar"><div role="group" aria-label="物流类别" id="filters"><button class="filter active" data-category="all">全部服务商 <span>19</span></button><button class="filter" data-category="ocean">海运 <span>10</span></button><button class="filter" data-category="express">国际快递 <span>5</span></button><button class="filter" data-category="customs">双清专线 <span>4</span></button></div><span id="directory-hint">官方网站查询入口 ↗</span></div>
+        <div id="content-grid" class="carrier-grid"></div>
+      </section>
+      <footer><span><b>LogiHub.</b> 让全球物流，触手可及。</span><span>查询结果以物流商官方信息为准 <span class="footer-dot">·</span> 数据仅保存在当前浏览器</span></footer>
+    </main>
+  </div>
+  <div id="toast" role="status" class="toast" hidden></div>
+  <dialog id="tracking-dialog"><div class="dialog-heading"><div><span class="eyebrow">TRACKING WORKSPACE</span><h2 id="dialog-title">运单已添加</h2></div><button class="icon-button" id="close-dialog" aria-label="关闭">×</button></div><p class="dialog-note">单个单号会自动打开官网。若浏览器拦截了窗口，或需要查询批量单号，请点击下方查询链接。“携带单号查询”会将该单号传给官网；“需手动粘贴”请先复制。若官网未自动填入，可复制单号重试。</p><div id="dialog-shipments"></div></dialog>
+  <dialog id="help-dialog"><div class="dialog-heading"><h2>如何使用 LogiHub</h2><button id="close-help" class="icon-button" aria-label="关闭">×</button></div><ol class="help-list"><li>选择物流商，输入一个或多个运单号。</li><li>点击“查询物流”将单号添加到“我的运单”。</li><li>DHL、UPS、FedEx、USPS 和 17TRACK 支持携带单号打开官网，其他服务商请先复制再粘贴查询。</li><li>点击星标收藏常用物流商，方便下次查找。</li></ol><p class="dialog-note">运单与收藏保存在本浏览器，不上传本平台服务器；点击携带单号查询后，该单号会传给对应官网。官网可能要求验证码或重新输入。清除浏览器数据会删除记录。双清专线中部分网站使用 HTTP，请避免在其页面提交敏感信息。</p></dialog>
+</body>
+</html>

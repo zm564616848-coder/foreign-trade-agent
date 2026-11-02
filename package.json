@@ -1,0 +1,14 @@
+{
+  "name": "foreign-trade-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "统一物流查询工作台",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test",
+    "check": "node --check server.js && node --check public/app.js && node --check public/carriers.js"
+  },
+  "engines": { "node": ">=22" }
+}
