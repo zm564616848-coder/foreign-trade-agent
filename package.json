@@ -8,7 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "node --test",
-    "check": "node --check server.js && node --check tracking.js && node --check public/app.js && node --check public/carriers.js"
+    "check": "node --check server.js && node --check tracking.js && node --check public/app.js && node --check public/carriers.js && node --check public/submit-query.js"
   },
   "engines": { "node": ">=22" }
 }

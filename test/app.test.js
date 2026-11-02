@@ -67,10 +67,19 @@ test('all shipment queries carry the number and clearly distinguish aggregator f
   for (const carrier of carriers) {
     const result = queryDestination(carrier.id, 'TEST123456789');
     assert.equal(result.prefilled, true);
-    assert.ok(decodeURIComponent(result.url).includes('TEST123456789'));
+    assert.ok(result.method === 'POST' ? result.fields.bills === 'TEST123456789' : decodeURIComponent(result.url).includes('TEST123456789'));
     assert.equal(result.fallback, !supportsTrackingLink(carrier.id));
     if (result.fallback) { assert.equal(new URL(result.url).hostname, 't.17track.net'); assert.equal(result.source, '17TRACK'); }
   }
   assert.equal(new URL(queryDestination('fedex', 'TEST123456789').url).hostname, 'www.fedex.com');
   assert.throws(() => queryDestination('fedex', '<script>'));
+});
+test('Tongzhi uses the verified official POST form, not aggregator or guessed GET parameters', () => {
+  const result = queryDestination('tongzhi', 'TEST123456789');
+  assert.equal(result.url, 'http://www.cnwwil.com/Track');
+  assert.equal(result.method, 'POST');
+  assert.deepEqual(result.fields, { bills: 'TEST123456789' });
+  assert.equal(result.fallback, false);
+  assert.match(result.navigationUrl, /^\.\/submit-query\.html\?carrier=tongzhi&number=TEST123456789$/);
+  assert.throws(() => queryDestination('tongzhi', 'ABC&url=https://other.example'));
 });

@@ -1,4 +1,4 @@
-import { carriers, categories, filterCarriers, parseTrackingNumbers, supportsTrackingLink, officialTrackingLink, queryDestination } from './carriers.js';
+import { carriers, categories, filterCarriers, parseTrackingNumbers, supportsTrackingLink, officialTrackingLink, queryDestination, websiteVerification } from './carriers.js';
 
 const $ = selector => document.querySelector(selector);
 const key = 'logihub.v1';
@@ -39,7 +39,7 @@ function logo(carrier) {
 function openOfficial(carrier, number) {
   const destination = number ? queryDestination(carrier.id, number) : officialTrackingLink(carrier.id);
   const a = element('a', 'official-link', destination.fallback ? '17TRACK 查询 ↗' : destination.prefilled ? '官网直达查询 ↗' : '官网入口 ↗');
-  a.href = destination.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  a.href = destination.navigationUrl || destination.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
   a.setAttribute('aria-label', `${destination.fallback ? '17TRACK（' + carrier.name + '备用查询）' : carrier.name}${destination.prefilled ? '携带单号' + number + '查询' : '官方网站查询'}`);
   return a;
 }
@@ -66,8 +66,16 @@ function carrierCard(carrier) {
     if ($('#tracking-input').value.trim()) $('#tracking-form').requestSubmit();
     else { $('#tracking-input').focus(); $('#tracking-form').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   };
-  bottom.append(tag, choose);
-  const capability = element('p', 'integration-note', supportsTrackingLink(carrier.id) ? '官网直达 · 自动携带单号' : '单号查询使用 17TRACK · 自动携带');
+  const actions = element('div', 'carrier-actions');
+  if (carrier.category === 'customs') {
+    const original = openOfficial(carrier);
+    original.textContent = websiteVerification[carrier.id]?.identity ? '官网入口 ↗' : '原网址 ↗';
+    original.setAttribute('aria-label', `${carrier.name}原网址，未自动提交单号`);
+    actions.append(original);
+  }
+  actions.append(choose);
+  bottom.append(tag, actions);
+  const capability = element('p', 'integration-note', websiteVerification[carrier.id]?.note || (supportsTrackingLink(carrier.id) ? '官网直达 · 自动携带单号' : '单号查询使用 17TRACK · 自动携带'));
   card.append(top, name, english, capability, bottom);
   return card;
 }
@@ -99,12 +107,12 @@ function openQuery(destination) {
   const tab = window.open('about:blank', '_blank');
   if (tab) {
     tab.opener = null;
-    tab.location.replace(destination.url);
+    tab.location.replace(destination.navigationUrl || destination.url);
     $('#query-feedback').textContent = `${destination.source}已打开，单号已自动携带。`;
   } else {
     $('#query-feedback').replaceChildren(element('span', '', '浏览器拦截了新窗口，请点击：'));
     const link = element('a', 'official-link', `打开${destination.source}查询 ↗`);
-    link.href = destination.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.href = destination.navigationUrl || destination.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
     $('#query-feedback').append(link);
   }
 }
@@ -146,7 +154,7 @@ for (const [id, label] of Object.entries(categories)) {
 function updateQueryHint() {
   const carrier = carriers.find(c => c.id === $('#carrier-select').value);
   $('#query-hint').textContent = !carrier ? 'ⓘ 输入一次，自动打开查询页并携带单号。' : supportsTrackingLink(carrier.id)
-    ? `ⓘ 将打开${carrier.name}官网，自动携带单号。`
+    ? `ⓘ 将打开${carrier.name}官网，自动携带单号。${carrier.id === 'tongzhi' ? '该官网使用 HTTP，浏览器可能提示不安全。' : ''}`
     : `ⓘ ${carrier.name}暂无已确认的官网直达链接，将使用 17TRACK 并自动携带单号。`;
 }
 $('#carrier-select').addEventListener('change', updateQueryHint);

@@ -17,9 +17,16 @@ export const carriers = [
   ['usps', '美国邮政', 'USPS', 'express', 'https://tools.usps.com/tracking/', 'USPS', '#3b608f'],
   ['jimi', '集米物流', 'JIMI LOGISTICS', 'customs', 'https://oms.gzfst.cn/index/track', '集米', '#328782'],
   ['tongzhi', '同智物流', 'TONGZHI LOGISTICS', 'customs', 'http://www.cnwwil.com', '同智', '#51739e'],
-  ['shida', '世达物流', 'SHIDA LOGISTICS', 'customs', 'http://www.stockcargo.cn/index.php?m=content&c=index&a=cargo_tracking&catid=20', '世达', '#7f6698'],
+  ['shida', '世拓物流（原标世达）', 'STOCK LOGISTICS', 'customs', 'http://www.stockcargo.cn/index.php?m=content&c=index&a=cargo_tracking&catid=20', '世拓', '#7f6698'],
   ['meite', '美特联合物流', 'MEITE LOGISTICS', 'customs', 'http://jingya.track.8bami.com/?EnterpriseNo=jy', '美特', '#ae7850']
 ].map(([id, name, english, category, url, mark, color]) => ({ id, name, english, category, url, mark, color }));
+
+export const websiteVerification = {
+  jimi: { identity: false, note: '原查询页可访问，集米品牌归属待核验；单号查询使用 17TRACK' },
+  tongzhi: { identity: true, note: '同智官网已核验 · 官方表单自动提交单号（HTTP）' },
+  shida: { identity: true, note: '原站显示广州世拓；查询页被网站防护拦截，查询使用 17TRACK' },
+  meite: { identity: false, note: '原网址为 8BAMI 托管查询页，美特归属待核验；查询使用 17TRACK' }
+};
 
 export function filterCarriers({ query = '', category = 'all', favorites = null } = {}) {
   const term = query.trim().toLowerCase();
@@ -46,7 +53,7 @@ const trackingLinks = {
 };
 
 export function supportsTrackingLink(carrierId) {
-  return Object.hasOwn(trackingLinks, carrierId);
+  return carrierId === 'tongzhi' || Object.hasOwn(trackingLinks, carrierId);
 }
 
 export function officialTrackingLink(carrierId, number) {
@@ -54,6 +61,9 @@ export function officialTrackingLink(carrierId, number) {
   if (!carrier) throw new Error('未知物流商');
   if (number === undefined) return { url: carrier.url, prefilled: false };
   if (typeof number !== 'string' || !/^[A-Za-z0-9-]{4,50}$/.test(number)) throw new Error('无效物流单号');
+  // Verified against the form on cnwwil.com and an authorized live shipment.
+  // GET query parameters are ignored; POST is required for actual results.
+  if (carrierId === 'tongzhi') return { url: 'http://www.cnwwil.com/Track', prefilled: true, method: 'POST', fields: { bills: number } };
   return supportsTrackingLink(carrierId)
     ? { url: trackingLinks[carrierId](number), prefilled: true }
     : { url: carrier.url, prefilled: false };
@@ -62,6 +72,8 @@ export function officialTrackingLink(carrierId, number) {
 export function queryDestination(carrierId, number) {
   const destination = officialTrackingLink(carrierId, number);
   const carrier = carriers.find(c => c.id === carrierId);
-  if (destination.prefilled) return { ...destination, source: `${carrier.name}官网`, fallback: false };
-  return { ...officialTrackingLink('17track', number), source: '17TRACK', fallback: true };
+  if (destination.prefilled) return { ...destination, source: `${carrier.name}官网`, fallback: false,
+    navigationUrl: destination.method === 'POST' ? `./submit-query.html?carrier=${encodeURIComponent(carrierId)}&number=${encodeURIComponent(number)}` : destination.url };
+  const fallback = officialTrackingLink('17track', number);
+  return { ...fallback, navigationUrl: fallback.url, source: '17TRACK', fallback: true };
 }
