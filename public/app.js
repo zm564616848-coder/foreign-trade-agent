@@ -1,4 +1,4 @@
-import { carriers, categories, filterCarriers, parseTrackingNumbers, supportsTrackingLink, officialTrackingLink } from './carriers.js';
+import { carriers, categories, filterCarriers, parseTrackingNumbers, supportsTrackingLink, officialTrackingLink, queryDestination } from './carriers.js';
 
 const $ = selector => document.querySelector(selector);
 const key = 'logihub.v1';
@@ -14,8 +14,6 @@ try {
 let view = 'directory';
 let category = 'all';
 let toastTimer;
-const liveResults = new Map();
-const statusLabels = { NotFound: '暂无轨迹', InfoReceived: '已收到预报', InTransit: '运输中', Expired: '查询已过期', AvailableForPickup: '待取件', OutForDelivery: '派送中', DeliveryFailure: '派送异常', Delivered: '已签收', Exception: '运输异常', Pending: '采集轨迹中', Unknown: '状态待确认' };
 function notify(message) {
   $('#toast').textContent = message;
   $('#toast').hidden = false;
@@ -39,10 +37,10 @@ function logo(carrier) {
   return el;
 }
 function openOfficial(carrier, number) {
-  const destination = officialTrackingLink(carrier.id, number);
-  const a = element('a', 'official-link', destination.prefilled ? '携带单号查询 ↗' : '官网查询 ↗');
+  const destination = number ? queryDestination(carrier.id, number) : officialTrackingLink(carrier.id);
+  const a = element('a', 'official-link', destination.fallback ? '17TRACK 查询 ↗' : destination.prefilled ? '官网直达查询 ↗' : '官网入口 ↗');
   a.href = destination.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-  a.setAttribute('aria-label', `${carrier.name}${destination.prefilled ? '携带单号' + number + '查询' : '官方网站查询'}`);
+  a.setAttribute('aria-label', `${destination.fallback ? '17TRACK（' + carrier.name + '备用查询）' : carrier.name}${destination.prefilled ? '携带单号' + number + '查询' : '官方网站查询'}`);
   return a;
 }
 function carrierCard(carrier) {
@@ -61,8 +59,15 @@ function carrierCard(carrier) {
   const bottom = element('div', 'card-bottom');
   const tag = element('span', 'category-tag', categories[carrier.category]);
   if (carrier.url.startsWith('http:')) tag.append(element('span', 'http-label', ' · HTTP'));
-  bottom.append(tag, openOfficial(carrier));
-  const capability = element('p', 'integration-note', carrier.id === 'tongzhi' ? '支持本页轨迹 · 同智 TZ' : supportsTrackingLink(carrier.id) ? '支持本页轨迹 / 官网查询' : '打开官网后粘贴单号查询');
+  const choose = element('button', 'official-link choose-carrier', '选择并查询 ↗');
+  choose.onclick = () => {
+    $('#carrier-select').value = carrier.id;
+    updateQueryHint();
+    if ($('#tracking-input').value.trim()) $('#tracking-form').requestSubmit();
+    else { $('#tracking-input').focus(); $('#tracking-form').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  };
+  bottom.append(tag, choose);
+  const capability = element('p', 'integration-note', supportsTrackingLink(carrier.id) ? '官网直达 · 自动携带单号' : '单号查询使用 17TRACK · 自动携带');
   card.append(top, name, english, capability, bottom);
   return card;
 }
@@ -74,52 +79,34 @@ function shipmentCard(shipment, removable = true) {
   const carrier = carriers.find(c => c.id === shipment.carrier);
   const card = element('article', 'shipment-card');
   const top = element('div', 'shipment-top');
-  const inPage = carrier.category === 'express' || carrier.id === 'tongzhi';
-  top.append(logo(carrier), element('strong', '', carrier.name), element('span', 'pending-tag', inPage ? '本页轨迹' : '官网入口'));
+  top.append(logo(carrier), element('strong', '', carrier.name), element('span', 'pending-tag', supportsTrackingLink(carrier.id) ? '官网直达' : '17TRACK'));
   const number = element('div', 'shipment-number', shipment.number);
   const actions = element('div', 'shipment-actions');
   const copyButton = element('button', 'secondary-button', '复制单号');
   copyButton.onclick = () => copy(shipment.number);
-  const query = element('button', 'secondary-button', '查看本页轨迹');
-  query.onclick = async () => {
-    query.disabled = true; query.textContent = '查询中…';
-    timeline.replaceChildren(element('p', 'integration-note', '正在获取真实轨迹…'));
-    try {
-      const response = await fetch('./api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ carrier: carrier.id, number: shipment.number }), signal: AbortSignal.timeout(50000) });
-      if (response.status === 404 || response.status === 405) throw new Error('当前站点尚未连接实时查询后端，需完成服务部署后启用。');
-      let data;
-      try { data = await response.json(); } catch { throw new Error('查询服务返回异常，请稍后重试'); }
-      if (!response.ok) throw new Error(data.error || '查询失败，请稍后重试');
-      if (data.number !== shipment.number || !Array.isArray(data.events)) throw new Error('查询服务返回的轨迹格式异常');
-      liveResults.set(shipment.id, data);
-      paintTimeline(timeline, data);
-    } catch (error) { timeline.replaceChildren(element('p', 'form-error', error.name === 'TimeoutError' ? '查询超时，请稍后重试' : error.message)); }
-    finally { query.disabled = false; query.textContent = '刷新本页轨迹'; }
-  };
-  actions.append(query, copyButton, openOfficial(carrier, shipment.number));
+  actions.append(openOfficial(carrier, shipment.number), copyButton);
   if (removable) {
     const remove = element('button', 'remove-button', '移除');
     remove.setAttribute('aria-label', `移除运单 ${shipment.number}`);
     remove.onclick = () => { state.shipments = state.shipments.filter(s => s.id !== shipment.id); save(); render(); notify('运单已移除'); };
     actions.append(remove);
   }
-  const timeline = element('div', 'tracking-timeline');
-  timeline.setAttribute('aria-live', 'polite');
-  if (liveResults.has(shipment.id)) paintTimeline(timeline, liveResults.get(shipment.id));
-  card.append(top, number, actions, timeline);
+  card.append(top, number, actions);
   return card;
 }
-function paintTimeline(container, data) {
-  container.replaceChildren();
-  container.append(element('strong', 'tracking-status', statusLabels[data.status] || data.status), element('p', 'integration-note', `来源：${data.source || '17TRACK'} · 自动识别服务商${data.providers?.length ? '：' + data.providers.join(' / ') : '（请核对识别结果）'}`));
-  if (!data.events.length) { container.append(element('p', 'integration-note', '服务尚未返回轨迹事件，请稍后刷新。')); return; }
-  const list = element('ol', 'timeline-list');
-  data.events.forEach(event => {
-    const item = element('li');
-    item.append(element('time', '', event.time || '时间未提供'), element('p', '', event.description), element('small', '', [event.location, event.provider].filter(Boolean).join(' · ')));
-    list.append(item);
-  });
-  container.append(list);
+function openQuery(destination) {
+  // Keep window creation synchronous with the click/submit gesture.
+  const tab = window.open('about:blank', '_blank');
+  if (tab) {
+    tab.opener = null;
+    tab.location.replace(destination.url);
+    $('#query-feedback').textContent = `${destination.source}已打开，单号已自动携带。`;
+  } else {
+    $('#query-feedback').replaceChildren(element('span', '', '浏览器拦截了新窗口，请点击：'));
+    const link = element('a', 'official-link', `打开${destination.source}查询 ↗`);
+    link.href = destination.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    $('#query-feedback').append(link);
+  }
 }
 function render() {
   const grid = $('#content-grid');
@@ -156,26 +143,29 @@ for (const [id, label] of Object.entries(categories)) {
   carriers.filter(c => c.category === id).forEach(c => { const option = element('option', '', `${c.name} · ${c.english}`); option.value = c.id; group.append(option); });
   $('#carrier-select').append(group);
 }
+function updateQueryHint() {
+  const carrier = carriers.find(c => c.id === $('#carrier-select').value);
+  $('#query-hint').textContent = !carrier ? 'ⓘ 输入一次，自动打开查询页并携带单号。' : supportsTrackingLink(carrier.id)
+    ? `ⓘ 将打开${carrier.name}官网，自动携带单号。`
+    : `ⓘ ${carrier.name}暂无已确认的官网直达链接，将使用 17TRACK 并自动携带单号。`;
+}
+$('#carrier-select').addEventListener('change', updateQueryHint);
 $('#tracking-form').addEventListener('submit', event => {
   event.preventDefault();
   $('#form-error').textContent = '';
+  $('#query-feedback').textContent = '';
   try {
     const carrier = $('#carrier-select').value;
     const numbers = parseTrackingNumbers($('#tracking-input').value);
     if (!carriers.some(c => c.id === carrier) || !numbers.length) throw new Error('请选择物流商并输入有效单号');
-    const selected = numbers.map(number => {
-      const existing = state.shipments.find(s => s.number === number && s.carrier === carrier);
-      if (existing) return existing;
-      const shipment = { id: crypto.randomUUID(), carrier, number };
-      state.shipments.unshift(shipment);
-      return shipment;
-    });
-    save();
-    $('#dialog-title').textContent = `${selected.length} 个运单已添加到工作台`;
-    $('#dialog-shipments').replaceChildren(...selected.map(s => shipmentCard(s, false)));
-    render(); $('#tracking-dialog').showModal();
-    // Query on this page; official links are now an explicit optional fallback.
-    $('#dialog-shipments .secondary-button').click();
+    if (numbers.length !== 1) throw new Error('请每次查询一个单号，以便自动打开官网结果。');
+    const number = numbers[0];
+    const destination = queryDestination(carrier, number);
+    openQuery(destination);
+    if (!state.shipments.some(s => s.number === number && s.carrier === carrier)) {
+      state.shipments.unshift({ id: crypto.randomUUID(), carrier, number });
+      save(); render();
+    }
   } catch (error) { $('#form-error').textContent = error.message; }
 });
 $('#search').addEventListener('input', render);
@@ -185,9 +175,9 @@ document.querySelectorAll('[data-category]').forEach(button => button.addEventLi
   document.querySelectorAll('[data-category]').forEach(b => { b.classList.toggle('active', b === button); b.setAttribute('aria-pressed', String(b === button)); });
   render();
 }));
-$('#close-dialog').onclick = () => $('#tracking-dialog').close();
 $('#help-button').onclick = () => $('#help-dialog').showModal();
 $('#close-help').onclick = () => $('#help-dialog').close();
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', e => { if (e.target === dialog) { const r = dialog.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close(); } }));
 render();
+updateQueryHint();
 if (storageBroken) { $('.local-badge').textContent = '存储读取失败'; notify('本地记录无法读取，新增记录将尝试重新保存'); }

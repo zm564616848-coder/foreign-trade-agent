@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { carriers, filterCarriers, parseTrackingNumbers, officialTrackingLink, supportsTrackingLink } from '../public/carriers.js';
+import { carriers, filterCarriers, parseTrackingNumbers, officialTrackingLink, supportsTrackingLink, queryDestination } from '../public/carriers.js';
 import { createServer } from '../server.js';
 
 test('directory includes all supplied carriers and clean official URLs', () => {
@@ -59,4 +59,18 @@ test('server delivers application, health, security headers and proper errors', 
   assert.equal((await fetch(`${base}/missing`)).status, 404);
   assert.equal((await fetch(base, { method: 'POST' })).status, 405);
   assert.equal((await fetch(`${base}/.git/config`)).status, 404);
+  const retired = await fetch(`${base}/api/track`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ carrier: 'fedex', number: 'TEST123456789' }) });
+  assert.equal(retired.status, 410);
+  assert.match((await retired.json()).error, /已停用/);
+});
+test('all shipment queries carry the number and clearly distinguish aggregator fallback', () => {
+  for (const carrier of carriers) {
+    const result = queryDestination(carrier.id, 'TEST123456789');
+    assert.equal(result.prefilled, true);
+    assert.ok(decodeURIComponent(result.url).includes('TEST123456789'));
+    assert.equal(result.fallback, !supportsTrackingLink(carrier.id));
+    if (result.fallback) { assert.equal(new URL(result.url).hostname, 't.17track.net'); assert.equal(result.source, '17TRACK'); }
+  }
+  assert.equal(new URL(queryDestination('fedex', 'TEST123456789').url).hostname, 'www.fedex.com');
+  assert.throws(() => queryDestination('fedex', '<script>'));
 });

@@ -6,13 +6,14 @@ import { createTrackingService, TrackingError } from './tracking.js';
 
 const root = path.resolve(fileURLToPath(new URL('./public/', import.meta.url)));
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' };
-export function createServer({ track = createTrackingService() } = {}) {
+export function createServer({ track = createTrackingService(), enableTracking = false } = {}) {
   const requests = new Map();
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname === '/api/track') {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.setHeader('Cache-Control', 'no-store');
+      if (!enableTracking) { res.writeHead(410); return res.end(JSON.stringify({ error: '当前已切换为官网直达查询，本页轨迹接口已停用' })); }
       if (req.method !== 'POST') { res.writeHead(405); return res.end(JSON.stringify({ error: '请使用 POST 查询' })); }
       try {
         // Do not trust client-supplied forwarding headers for rate limits.

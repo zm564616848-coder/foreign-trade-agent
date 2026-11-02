@@ -27,9 +27,10 @@
         <div class="query-copy"><span class="pill">QUICK TRACK</span><h2 id="query-title">货物到哪了？<br>从这里开始查询。</h2><p>提单号 / 集装箱号 / 快递单号</p><div class="query-decoration" aria-hidden="true">↗</div></div>
         <form id="tracking-form">
           <div class="form-top"><h3>快速查询</h3><span>01 — 选择物流商，输入单号</span></div>
-          <div class="query-fields"><label>物流服务商<select id="carrier-select" required><option value="">请选择物流服务商</option></select></label><label class="tracking-label">物流单号<textarea id="tracking-input" rows="1" placeholder="输入单号，多个单号用空格或换行分隔" required maxlength="1100"></textarea></label><button class="primary-button" type="submit">查询物流 <span>↗</span></button></div>
-          <div class="form-bottom"><span>ⓘ 本页展示真实轨迹；未配置服务或未覆盖的物流商会明确提示。</span><span>支持批量添加</span></div>
+          <div class="query-fields"><label>物流服务商<select id="carrier-select" required><option value="">请选择物流服务商</option></select></label><label class="tracking-label">物流单号<input id="tracking-input" type="text" placeholder="输入一个单号，自动打开查询页" required maxlength="50" autocomplete="off" spellcheck="false"></label><button class="primary-button" type="submit">打开查询结果 <span>↗</span></button></div>
+          <div class="form-bottom"><span id="query-hint">ⓘ 输入一次，自动打开查询页并携带单号。</span><span>免重复输入</span></div>
           <p id="form-error" class="form-error" role="alert"></p>
+          <p id="query-feedback" class="query-feedback" role="status"></p>
         </form>
       </section>
       <section class="stats" aria-label="物流目录统计">
@@ -45,7 +46,6 @@
     </main>
   </div>
   <div id="toast" role="status" class="toast" hidden></div>
-  <dialog id="tracking-dialog"><div class="dialog-heading"><div><span class="eyebrow">TRACKING WORKSPACE</span><h2 id="dialog-title">运单已添加</h2></div><button class="icon-button" id="close-dialog" aria-label="关闭">×</button></div><p class="dialog-note">轨迹在本页显示，不会自动打开外部网页。通过 17TRACK 自动识别服务商，支持国际快递和同智（TZ），请核对识别结果；其他海运及双清专线暂未确认覆盖。首次登记后，服务商可能需要时间采集轨迹。官网链接仅作为手动备用入口。</p><div id="dialog-shipments"></div></dialog>
-  <dialog id="help-dialog"><div class="dialog-heading"><h2>如何使用 LogiHub</h2><button id="close-help" class="icon-button" aria-label="关闭">×</button></div><ol class="help-list"><li>选择物流商，输入一个或多个运单号。</li><li>点击“查询物流”将单号添加到“我的运单”。</li><li>点击“查看本页轨迹”获取真实时间线；需先完成后端服务配置。官网查询保留为手动备用入口。</li><li>点击星标收藏常用物流商，方便下次查找。</li></ol><p class="dialog-note">运单与收藏保存在本浏览器；查询轨迹时，单号会通过后端发送给 17TRACK。点击官网查询时，该单号可能传给对应官网。官网可能要求验证码或重新输入。清除浏览器数据会删除记录。双清专线中部分网站使用 HTTP，请避免在其页面提交敏感信息。</p></dialog>
+  <dialog id="help-dialog"><div class="dialog-heading"><h2>如何使用 LogiHub</h2><button id="close-help" class="icon-button" aria-label="关闭">×</button></div><ol class="help-list"><li>选择物流商，输入一个单号。</li><li>点击“打开查询结果”，自动弹出带单号的查询页。</li><li>FedEx、DHL、UPS、USPS、17TRACK 使用各自官网；其他物流商使用明确标注的 17TRACK 备用查询。</li><li>本页不再显示轨迹，不调用收费轨迹 API。历史单号仍可再次查询。</li></ol><p class="dialog-note">单号只在打开查询链接时传给所标注的查询网站。本平台不能绕过官网的验证码或访问限制；网站改版可能影响直达链接。17TRACK 自动识别物流商，不保证覆盖全部海运或双清单号。请允许本站弹出新窗口。</p></dialog>
 </body>
 </html>

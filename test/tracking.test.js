@@ -92,7 +92,7 @@ test('provider authorization and schema errors are sanitized', async () => {
   }
 });
 test('HTTP tracking route enforces format, method, limits and protects internal failures', async t => {
-  const server = createServer({ track: async input => { if (input.number === 'FAIL1234') throw new Error('private credential'); return normalizeTracking(shipment); } });
+  const server = createServer({ enableTracking: true, track: async input => { if (input.number === 'FAIL1234') throw new Error('private credential'); return normalizeTracking(shipment); } });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
   const url = `http://127.0.0.1:${server.address().port}/api/track`;

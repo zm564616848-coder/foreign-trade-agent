@@ -58,3 +58,10 @@ export function officialTrackingLink(carrierId, number) {
     ? { url: trackingLinks[carrierId](number), prefilled: true }
     : { url: carrier.url, prefilled: false };
 }
+
+export function queryDestination(carrierId, number) {
+  const destination = officialTrackingLink(carrierId, number);
+  const carrier = carriers.find(c => c.id === carrierId);
+  if (destination.prefilled) return { ...destination, source: `${carrier.name}官网`, fallback: false };
+  return { ...officialTrackingLink('17track', number), source: '17TRACK', fallback: true };
+}
