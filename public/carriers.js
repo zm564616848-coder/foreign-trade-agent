@@ -23,7 +23,7 @@ export const carriers = [
 
 export const websiteVerification = {
   jimi: { identity: false, note: '原查询页可访问，集米品牌归属待核验；单号查询使用 17TRACK' },
-  tongzhi: { identity: true, note: '同智官网已核验 · 官方表单自动提交单号（HTTP）' },
+  tongzhi: { identity: true, note: '同智官网已核验；单号查询使用 HTTPS 17TRACK，免 HTTP 表单确认' },
   shida: { identity: true, note: '原站显示广州世拓；查询页被网站防护拦截，查询使用 17TRACK' },
   meite: { identity: false, note: '原网址为 8BAMI 托管查询页，美特归属待核验；查询使用 17TRACK' }
 };
@@ -53,7 +53,7 @@ const trackingLinks = {
 };
 
 export function supportsTrackingLink(carrierId) {
-  return carrierId === 'tongzhi' || Object.hasOwn(trackingLinks, carrierId);
+  return Object.hasOwn(trackingLinks, carrierId);
 }
 
 export function officialTrackingLink(carrierId, number) {
@@ -61,9 +61,6 @@ export function officialTrackingLink(carrierId, number) {
   if (!carrier) throw new Error('未知物流商');
   if (number === undefined) return { url: carrier.url, prefilled: false };
   if (typeof number !== 'string' || !/^[A-Za-z0-9-]{4,50}$/.test(number)) throw new Error('无效物流单号');
-  // Verified against the form on cnwwil.com and an authorized live shipment.
-  // GET query parameters are ignored; POST is required for actual results.
-  if (carrierId === 'tongzhi') return { url: 'http://www.cnwwil.com/Track', prefilled: true, method: 'POST', fields: { bills: number } };
   return supportsTrackingLink(carrierId)
     ? { url: trackingLinks[carrierId](number), prefilled: true }
     : { url: carrier.url, prefilled: false };

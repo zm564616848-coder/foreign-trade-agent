@@ -74,12 +74,14 @@ test('all shipment queries carry the number and clearly distinguish aggregator f
   assert.equal(new URL(queryDestination('fedex', 'TEST123456789').url).hostname, 'www.fedex.com');
   assert.throws(() => queryDestination('fedex', '<script>'));
 });
-test('Tongzhi uses the verified official POST form, not aggregator or guessed GET parameters', () => {
+test('Tongzhi queries use HTTPS 17TRACK with the number and no insecure form', () => {
   const result = queryDestination('tongzhi', 'TEST123456789');
-  assert.equal(result.url, 'http://www.cnwwil.com/Track');
-  assert.equal(result.method, 'POST');
-  assert.deepEqual(result.fields, { bills: 'TEST123456789' });
-  assert.equal(result.fallback, false);
-  assert.match(result.navigationUrl, /^\.\/submit-query\.html\?carrier=tongzhi&number=TEST123456789$/);
+  assert.equal(result.url, 'https://t.17track.net/zh-cn#nums=TEST123456789');
+  assert.equal(result.navigationUrl, result.url);
+  assert.equal(result.fallback, true);
+  assert.equal(result.source, '17TRACK');
+  assert.equal(result.method, undefined);
+  assert.equal(result.fields, undefined);
+  assert.equal(supportsTrackingLink('tongzhi'), false);
   assert.throws(() => queryDestination('tongzhi', 'ABC&url=https://other.example'));
 });

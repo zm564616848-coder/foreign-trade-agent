@@ -154,7 +154,7 @@ for (const [id, label] of Object.entries(categories)) {
 function updateQueryHint() {
   const carrier = carriers.find(c => c.id === $('#carrier-select').value);
   $('#query-hint').textContent = !carrier ? 'ⓘ 输入一次，自动打开查询页并携带单号。' : supportsTrackingLink(carrier.id)
-    ? `ⓘ 将打开${carrier.name}官网，自动携带单号。${carrier.id === 'tongzhi' ? '该官网使用 HTTP，浏览器可能提示不安全。' : ''}`
+    ? `ⓘ 将打开${carrier.name}官网，自动携带单号。`
     : `ⓘ ${carrier.name}暂无已确认的官网直达链接，将使用 17TRACK 并自动携带单号。`;
 }
 $('#carrier-select').addEventListener('change', updateQueryHint);
