@@ -28,7 +28,7 @@
         <form id="tracking-form">
           <div class="form-top"><h3>快速查询</h3><span>01 — 选择物流商，输入单号</span></div>
           <div class="query-fields"><label>物流服务商<select id="carrier-select" required><option value="">请选择物流服务商</option></select></label><label class="tracking-label">物流单号<textarea id="tracking-input" rows="1" placeholder="输入单号，多个单号用空格或换行分隔" required maxlength="1100"></textarea></label><button class="primary-button" type="submit">查询物流 <span>↗</span></button></div>
-          <div class="form-bottom"><span>ⓘ 单个单号自动打开官网；若未打开，请点击弹窗内的查询链接。</span><span>支持批量添加</span></div>
+          <div class="form-bottom"><span>ⓘ 本页展示真实轨迹；未配置服务或未覆盖的物流商会明确提示。</span><span>支持批量添加</span></div>
           <p id="form-error" class="form-error" role="alert"></p>
         </form>
       </section>
@@ -45,7 +45,7 @@
     </main>
   </div>
   <div id="toast" role="status" class="toast" hidden></div>
-  <dialog id="tracking-dialog"><div class="dialog-heading"><div><span class="eyebrow">TRACKING WORKSPACE</span><h2 id="dialog-title">运单已添加</h2></div><button class="icon-button" id="close-dialog" aria-label="关闭">×</button></div><p class="dialog-note">单个单号会自动打开官网。若浏览器拦截了窗口，或需要查询批量单号，请点击下方查询链接。“携带单号查询”会将该单号传给官网；“需手动粘贴”请先复制。若官网未自动填入，可复制单号重试。</p><div id="dialog-shipments"></div></dialog>
-  <dialog id="help-dialog"><div class="dialog-heading"><h2>如何使用 LogiHub</h2><button id="close-help" class="icon-button" aria-label="关闭">×</button></div><ol class="help-list"><li>选择物流商，输入一个或多个运单号。</li><li>点击“查询物流”将单号添加到“我的运单”。</li><li>DHL、UPS、FedEx、USPS 和 17TRACK 支持携带单号打开官网，其他服务商请先复制再粘贴查询。</li><li>点击星标收藏常用物流商，方便下次查找。</li></ol><p class="dialog-note">运单与收藏保存在本浏览器，不上传本平台服务器；点击携带单号查询后，该单号会传给对应官网。官网可能要求验证码或重新输入。清除浏览器数据会删除记录。双清专线中部分网站使用 HTTP，请避免在其页面提交敏感信息。</p></dialog>
+  <dialog id="tracking-dialog"><div class="dialog-heading"><div><span class="eyebrow">TRACKING WORKSPACE</span><h2 id="dialog-title">运单已添加</h2></div><button class="icon-button" id="close-dialog" aria-label="关闭">×</button></div><p class="dialog-note">轨迹在本页显示，不会自动打开外部网页。通过 17TRACK 自动识别快递服务商，请核对识别结果；海运及双清专线暂未确认覆盖。首次登记后，服务商可能需要时间采集轨迹。官网链接仅作为手动备用入口。</p><div id="dialog-shipments"></div></dialog>
+  <dialog id="help-dialog"><div class="dialog-heading"><h2>如何使用 LogiHub</h2><button id="close-help" class="icon-button" aria-label="关闭">×</button></div><ol class="help-list"><li>选择物流商，输入一个或多个运单号。</li><li>点击“查询物流”将单号添加到“我的运单”。</li><li>点击“查看本页轨迹”获取真实时间线；需先完成后端服务配置。官网查询保留为手动备用入口。</li><li>点击星标收藏常用物流商，方便下次查找。</li></ol><p class="dialog-note">运单与收藏保存在本浏览器；查询轨迹时，单号会通过后端发送给 17TRACK。点击官网查询时，该单号可能传给对应官网。官网可能要求验证码或重新输入。清除浏览器数据会删除记录。双清专线中部分网站使用 HTTP，请避免在其页面提交敏感信息。</p></dialog>
 </body>
 </html>

@@ -14,6 +14,8 @@ try {
 let view = 'directory';
 let category = 'all';
 let toastTimer;
+const liveResults = new Map();
+const statusLabels = { NotFound: '暂无轨迹', InfoReceived: '已收到预报', InTransit: '运输中', Expired: '查询已过期', AvailableForPickup: '待取件', OutForDelivery: '派送中', DeliveryFailure: '派送异常', Delivered: '已签收', Exception: '运输异常', Pending: '采集轨迹中', Unknown: '状态待确认' };
 function notify(message) {
   $('#toast').textContent = message;
   $('#toast').hidden = false;
@@ -78,15 +80,46 @@ function shipmentCard(shipment, removable = true) {
   const actions = element('div', 'shipment-actions');
   const copyButton = element('button', 'secondary-button', '复制单号');
   copyButton.onclick = () => copy(shipment.number);
-  actions.append(copyButton, openOfficial(carrier, shipment.number));
+  const query = element('button', 'secondary-button', '查看本页轨迹');
+  query.onclick = async () => {
+    query.disabled = true; query.textContent = '查询中…';
+    timeline.replaceChildren(element('p', 'integration-note', '正在获取真实轨迹…'));
+    try {
+      const response = await fetch('./api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ carrier: carrier.id, number: shipment.number }), signal: AbortSignal.timeout(50000) });
+      if (response.status === 404 || response.status === 405) throw new Error('当前站点尚未连接实时查询后端，需完成服务部署后启用。');
+      let data;
+      try { data = await response.json(); } catch { throw new Error('查询服务返回异常，请稍后重试'); }
+      if (!response.ok) throw new Error(data.error || '查询失败，请稍后重试');
+      if (data.number !== shipment.number || !Array.isArray(data.events)) throw new Error('查询服务返回的轨迹格式异常');
+      liveResults.set(shipment.id, data);
+      paintTimeline(timeline, data);
+    } catch (error) { timeline.replaceChildren(element('p', 'form-error', error.name === 'TimeoutError' ? '查询超时，请稍后重试' : error.message)); }
+    finally { query.disabled = false; query.textContent = '刷新本页轨迹'; }
+  };
+  actions.append(query, copyButton, openOfficial(carrier, shipment.number));
   if (removable) {
     const remove = element('button', 'remove-button', '移除');
     remove.setAttribute('aria-label', `移除运单 ${shipment.number}`);
     remove.onclick = () => { state.shipments = state.shipments.filter(s => s.id !== shipment.id); save(); render(); notify('运单已移除'); };
     actions.append(remove);
   }
-  card.append(top, number, element('p', 'integration-note', direct ? '在新窗口将单号交给所选官网查询；结果以官网为准。' : '该官网暂未确认单号直达方式，请复制单号后粘贴查询。'), actions);
+  const timeline = element('div', 'tracking-timeline');
+  timeline.setAttribute('aria-live', 'polite');
+  if (liveResults.has(shipment.id)) paintTimeline(timeline, liveResults.get(shipment.id));
+  card.append(top, number, actions, timeline);
   return card;
+}
+function paintTimeline(container, data) {
+  container.replaceChildren();
+  container.append(element('strong', 'tracking-status', statusLabels[data.status] || data.status), element('p', 'integration-note', `来源：${data.source || '17TRACK'} · 自动识别服务商${data.providers?.length ? '：' + data.providers.join(' / ') : '（请核对识别结果）'}`));
+  if (!data.events.length) { container.append(element('p', 'integration-note', '服务尚未返回轨迹事件，请稍后刷新。')); return; }
+  const list = element('ol', 'timeline-list');
+  data.events.forEach(event => {
+    const item = element('li');
+    item.append(element('time', '', event.time || '时间未提供'), element('p', '', event.description), element('small', '', [event.location, event.provider].filter(Boolean).join(' · ')));
+    list.append(item);
+  });
+  container.append(list);
 }
 function render() {
   const grid = $('#content-grid');
@@ -141,12 +174,8 @@ $('#tracking-form').addEventListener('submit', event => {
     $('#dialog-title').textContent = `${selected.length} 个运单已添加到工作台`;
     $('#dialog-shipments').replaceChildren(...selected.map(s => shipmentCard(s, false)));
     render(); $('#tracking-dialog').showModal();
-    // Open during the user's submit gesture so browsers can allow the tab.
-    // Keep the dialog links available if popups are disabled or for a batch.
-    if (selected.length === 1) {
-      const item = selected[0];
-      openOfficial(carriers.find(c => c.id === item.carrier), item.number).click();
-    }
+    // Query on this page; official links are now an explicit optional fallback.
+    $('#dialog-shipments .secondary-button').click();
   } catch (error) { $('#form-error').textContent = error.message; }
 });
 $('#search').addEventListener('input', render);

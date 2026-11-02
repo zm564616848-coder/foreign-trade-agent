@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: logihub
+    runtime: node
+    plan: free
+    buildCommand: npm run check && npm test
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: TRACK17_API_KEY
+        sync: false
