@@ -1,5 +1,6 @@
 const endpoint = 'https://api.17track.net/track/v2.2/';
-const express = new Set(['17track', 'dhl', 'ups', 'fedex', 'usps']);
+// Tongzhi coverage confirmed with a user-authorized live query (provider TZ).
+const supported = new Set(['17track', 'dhl', 'ups', 'fedex', 'usps', 'tongzhi']);
 
 export class TrackingError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -41,7 +42,7 @@ export function createTrackingService({ apiKey = process.env.TRACK17_API_KEY, fe
   }
   return async ({ carrier, number }) => {
     if (typeof number !== 'string' || !/^[A-Za-z0-9-]{4,50}$/.test(number)) throw new TrackingError(400, '请输入有效单号');
-    if (!express.has(carrier)) throw new TrackingError(422, '该海运或双清服务商尚未确认 API 覆盖，暂不能在本页查询');
+    if (!supported.has(carrier)) throw new TrackingError(422, '该服务商尚未确认 API 覆盖，暂不能在本页查询');
     if (!apiKey) throw new TrackingError(503, '实时轨迹尚未开通：管理员需要配置后端查询服务及 API 密钥');
     const cached = cache.get(number);
     if (cached && Date.now() - cached.at < 60000) return cached.value;

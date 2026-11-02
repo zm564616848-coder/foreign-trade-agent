@@ -62,7 +62,7 @@ function carrierCard(carrier) {
   const tag = element('span', 'category-tag', categories[carrier.category]);
   if (carrier.url.startsWith('http:')) tag.append(element('span', 'http-label', ' · HTTP'));
   bottom.append(tag, openOfficial(carrier));
-  const capability = element('p', 'integration-note', supportsTrackingLink(carrier.id) ? '支持携带单号打开官网' : '打开官网后粘贴单号查询');
+  const capability = element('p', 'integration-note', carrier.id === 'tongzhi' ? '支持本页轨迹 · 同智 TZ' : supportsTrackingLink(carrier.id) ? '支持本页轨迹 / 官网查询' : '打开官网后粘贴单号查询');
   card.append(top, name, english, capability, bottom);
   return card;
 }
@@ -74,8 +74,8 @@ function shipmentCard(shipment, removable = true) {
   const carrier = carriers.find(c => c.id === shipment.carrier);
   const card = element('article', 'shipment-card');
   const top = element('div', 'shipment-top');
-  const direct = supportsTrackingLink(carrier.id);
-  top.append(logo(carrier), element('strong', '', carrier.name), element('span', 'pending-tag', direct ? '可携带单号' : '需手动粘贴'));
+  const inPage = carrier.category === 'express' || carrier.id === 'tongzhi';
+  top.append(logo(carrier), element('strong', '', carrier.name), element('span', 'pending-tag', inPage ? '本页轨迹' : '官网入口'));
   const number = element('div', 'shipment-number', shipment.number);
   const actions = element('div', 'shipment-actions');
   const copyButton = element('button', 'secondary-button', '复制单号');

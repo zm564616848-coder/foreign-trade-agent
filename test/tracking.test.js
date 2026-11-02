@@ -41,6 +41,15 @@ test('registered shipment query uses server credential, caches result, does not 
   assert.deepEqual(first, second);
   assert.ok(!JSON.stringify(first).includes('test-only-credential'));
 });
+test('Tongzhi selection queries the provider and returns its real source and events', async () => {
+  const item = structuredClone(shipment);
+  item.track_info.tracking.providers[0].provider.name = 'TZ';
+  const track = createTrackingService({ apiKey: 'test-only', fetchImpl: async () => reply({ accepted: [item], rejected: [] }) });
+  const result = await track({ carrier: 'tongzhi', number: 'TEST123456' });
+  assert.deepEqual(result.providers, ['TZ']);
+  assert.equal(result.events.length, 2);
+  assert.equal(result.status, 'InTransit');
+});
 test('new shipment registers then queries; pending data does not invent events', async () => {
   const calls = [];
   const track = createTrackingService({ apiKey: 'test-only', fetchImpl: async url => {

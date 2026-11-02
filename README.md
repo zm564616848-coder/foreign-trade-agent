@@ -9,7 +9,7 @@ cd /workspace/foreign-trade-agent
 npm start
 ```
 
-默认监听 `0.0.0.0:3000`，支持 `PORT`；开发时使用 `npm run dev`。检查命令：`npm run check`、`npm test`（11 项测试）。
+默认监听 `0.0.0.0:3000`，支持 `PORT`；开发时使用 `npm run dev`。检查命令：`npm run check`、`npm test`（12 项测试）。
 
 ## 功能
 
@@ -23,9 +23,9 @@ npm start
 
 后端 `POST /api/track` 使用 17TRACK API，密钥只从服务端的 `TRACK17_API_KEY` 读取。接口有缓存和限流；前端展示查询中、真实事件、尚无事件及错误状态，不显示模拟运输状态。
 
-**目前没有可用 API 密钥，尚未完成供应商真实联调或后端公网部署。** 已通过的接口测试使用测试替身，不能证明真实账户授权、当前接口兼容性或物流商覆盖。国际快递尝试自动识别，需核对识别结果；海运及双清暂未确认覆盖，会明确提示未支持。
+**已部署到 https://foreign-trade-agent.onrender.com/ ，并通过用户授权单号完成真实 17TRACK 查询，返回服务商 TZ 和 5 条轨迹。** 同智（TZ）和国际快递可尝试在本页查询；需核对服务商识别结果。其他海运及双清服务商仍未确认覆盖，不保证所有单号都能查到。自动测试使用测试替身，与本次真实单号验证区分。
 
-GitHub Pages 只能托管静态页面，无法运行实时轨迹后端。在该地址查询会显示后端尚未接通，并保留官网备用入口。仓库内的 `render.yaml` 可用于将页面与 API 一起部署到 Render；必须先连接托管账号并安全填写服务端密钥。详情见 [API_SETUP.md](API_SETUP.md)。
+GitHub Pages 只能托管静态页面，无法运行实时轨迹后端；请使用 Render 地址。页面与 API 已部署到同一 Render 服务，密钥仅在服务端配置。仓库内的 `render.yaml` 用于重复部署。详情见 [API_SETUP.md](API_SETUP.md)。
 
 ## 数据与限制
 
