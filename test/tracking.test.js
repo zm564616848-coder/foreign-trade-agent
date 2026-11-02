@@ -61,6 +61,20 @@ test('new shipment registers then queries; pending data does not invent events',
   assert.equal(result.status, 'Pending');
   assert.deepEqual(result.events, []);
 });
+test('already accepted shipment awaiting data is pending without duplicate registration', async () => {
+  const actions = [];
+  const track = createTrackingService({ apiKey: 'test-only', fetchImpl: async url => {
+    actions.push(url.split('/').pop());
+    return reply({ accepted: [{ number: 'TEST123456', track_info: null }], rejected: [] });
+  } });
+  const result = await track({ carrier: 'fedex', number: 'TEST123456' });
+  assert.equal(result.status, 'Pending');
+  assert.deepEqual(actions, ['gettrackinfo']);
+});
+test('registration rejection exposes only numeric provider code, not raw provider errors', async () => {
+  const track = createTrackingService({ apiKey: 'test-only', fetchImpl: async url => reply({ accepted: [], rejected: url.endsWith('/register') ? [{ number: 'TEST123456', error: { code: -12345, message: 'private upstream details' } }] : [] }) });
+  await assert.rejects(track({ carrier: 'fedex', number: 'TEST123456' }), e => e.status === 422 && e.message.includes('-12345') && !e.message.includes('private upstream details'));
+});
 test('provider authorization and schema errors are sanitized', async () => {
   for (const response of [new Response('private upstream text', { status: 401 }), new Response('not JSON'), reply({ accepted: [{ number: 'TEST123456', track_info: 'wrong' }] })]) {
     const track = createTrackingService({ apiKey: 'test-only', fetchImpl: async () => response });

@@ -6,6 +6,11 @@ export class TrackingError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
 
+function rejectionCode(data, number) {
+  const code = data.rejected?.find(item => item.number === number)?.error?.code;
+  return Number.isSafeInteger(code) ? `（服务错误码：${code}）` : '';
+}
+
 export function normalizeTracking(item) {
   const info = item.track_info;
   if (!info || typeof info !== 'object') throw new TrackingError(502, '轨迹服务返回的数据格式异常');
@@ -53,16 +58,16 @@ export function createTrackingService({ apiKey = process.env.TRACK17_API_KEY, fe
     if (++used > 50) throw new TrackingError(429, '本服务今日查询上限已到，请稍后再试');
     // Query registered shipments first. Register only when no result exists.
     let data = await call('gettrackinfo', number);
-    let item = data.accepted?.find(i => i.number === number && i.track_info);
+    let item = data.accepted?.find(i => i.number === number);
     if (!item) {
       const registered = await call('register', number);
       if (!registered.accepted?.some(i => i.number === number)) {
-        throw new TrackingError(422, '该单号无法登记，请检查单号、服务商支持范围和账户额度');
+        throw new TrackingError(422, '该单号无法登记，请检查单号、服务商支持范围和账户额度' + rejectionCode(registered, number));
       }
       data = await call('gettrackinfo', number);
       item = data.accepted?.find(i => i.number === number && i.track_info);
     }
-    if (!item) return { number, source: '17TRACK', status: 'Pending', providers: [], events: [], retrievedAt: new Date().toISOString() };
+    if (!item?.track_info) return { number, source: '17TRACK', status: 'Pending', providers: [], events: [], retrievedAt: new Date().toISOString() };
     const value = normalizeTracking(item);
     // Bound retained shipment data; no persistent tracking cache is written.
     if (cache.size >= 100) cache.delete(cache.keys().next().value);
