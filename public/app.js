@@ -46,11 +46,13 @@ function carrierCard(carrier) {
   const tag = element('span', 'category-tag', categories[carrier.category]);
   if (carrier.url.startsWith('http:')) tag.append(element('span', 'http-label', ' · HTTP'));
   const verified = websiteVerification[carrier.id];
-  const link = element('a', 'official-link', verified?.identity === false ? '访问原网址 ↗' : '访问网站 ↗');
+  const link = element('a', 'carrier-card-link', carrier.name);
   link.href = carrier.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
   link.setAttribute('aria-label', `访问${carrier.name}网站`);
-  bottom.append(tag, link);
-  card.append(top, element('h3', '', carrier.name), element('div', 'english-name', carrier.english));
+  bottom.append(tag);
+  const heading = element('h3');
+  heading.append(link);
+  card.append(top, heading, element('div', 'english-name', carrier.english));
   if (verified) card.append(element('p', 'integration-note', verified.note));
   card.append(bottom);
   return card;

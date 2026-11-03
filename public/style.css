@@ -7,3 +7,4 @@
 #tracking-input{border:1px solid #e1e7e5;color:#354f47;background:#fbfcfc;border-radius:5px;height:43px;width:100%;font-size:11px;padding:12px;min-width:0}#tracking-input::placeholder{color:#a7b2ae;font-size:10px}.query-feedback{font-size:11px;color:#21866d;line-height:1.8;margin:10px 0 0}.query-feedback:empty{display:none}
 .choose-carrier{background:none;padding:0;text-align:right}
 .carrier-actions{display:flex;gap:9px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.carrier-card .integration-note{min-height:34px;font-size:9px;line-height:1.7}.carrier-card .card-bottom{align-items:center}
+.carrier-card{position:relative;cursor:pointer}.carrier-card-link::after{content:'';position:absolute;inset:0;border-radius:7px}.carrier-card-link:focus-visible{outline:none}.carrier-card-link:focus-visible::after{outline:3px solid #73cbb5;outline-offset:3px}.carrier-card .favorite-button{position:relative;z-index:1}
