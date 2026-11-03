@@ -3,13 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createTrackingService, TrackingError } from './tracking.js';
+import { createAgentRouter } from './agent-routes.js';
 
 const root = path.resolve(fileURLToPath(new URL('./public/', import.meta.url)));
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' };
-export function createServer({ track = createTrackingService(), enableTracking = false } = {}) {
+export function createServer({ track = createTrackingService(), enableTracking = false, agentService } = {}) {
+  const agentRouter=createAgentRouter(agentService?{service:agentService}:{});
   const requests = new Map();
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
+    if(await agentRouter(req,res,url))return;
     if (url.pathname === '/api/track') {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.setHeader('Cache-Control', 'no-store');
@@ -53,7 +56,7 @@ export function createServer({ track = createTrackingService(), enableTracking =
         'Content-Type': types[path.extname(file)] || 'application/octet-stream',
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'no-referrer',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://*.supabase.co; media-src 'self' blob: https://*.supabase.co; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
       });
       res.end(req.method === 'HEAD' ? undefined : body);
     } catch { res.writeHead(404); res.end('Not found'); }

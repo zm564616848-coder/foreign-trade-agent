@@ -3,11 +3,17 @@ services:
     name: logihub
     runtime: node
     plan: free
-    buildCommand: npm run check && npm test
+    buildCommand: npm ci --cache /tmp/logihub-npm-cache && npm run check && npm test
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: 24.19.0
-      - key: TRACK17_API_KEY
+      - key: AGENT_SUPABASE_URL
         sync: false
+      - key: AGENT_SUPABASE_ANON_KEY
+        sync: false
+      - key: AGENT_LLM_API_KEY
+        sync: false
+      - key: AGENT_LLM_MODEL
+        value: gpt-4.1-mini

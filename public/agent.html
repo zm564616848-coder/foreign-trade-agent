@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#172a29"><title>LogiHub · 智能问答 Agent</title><link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./agent.css"><script type="module" src="./agent.js"></script></head>
+<body>
+  <aside class="sidebar">
+    <a href="./" class="brand"><span class="brand-icon">L<span>↗</span></span>LogiHub<span class="brand-dot">.</span></a>
+    <div class="workspace"><span class="workspace-icon">知</span><div>我的知识工作台<small>PRIVATE KNOWLEDGE</small></div></div>
+    <div class="nav-label">工作台 / WORKSPACE</div>
+    <nav aria-label="主导航"><a href="./" class="nav-item"><span>▦</span>物流网站</a><a href="./agent.html" class="nav-item active" aria-current="page"><span>✧</span>智能问答 Agent</a></nav>
+    <div class="sidebar-note"><span class="globe">✧</span><strong>让资料成为你的知识</strong><p>连接文档、图片与视频<br>从原始资料找到有据可查的回答。</p></div>
+    <div class="sidebar-bottom"><span class="avatar">知</span><div>私人知识库<small>登录后访问自己的资料</small></div></div>
+  </aside>
+  <div class="layout">
+    <header class="topbar"><div>工作台 <span>/</span> <strong>智能问答 Agent</strong></div><div class="topbar-right"><span id="account-label">尚未登录</span><button id="logout" class="secondary-button" hidden>退出登录</button></div></header>
+    <main class="agent-main">
+      <div class="eyebrow">YOUR KNOWLEDGE, CONNECTED</div><h1>资料在这里，答案有依据<span>.</span></h1><p class="agent-intro">向自己的资料提问，查看引用原文，随时调用相关图片与视频。</p>
+      <div id="setup-banner" class="agent-banner" role="status">正在连接知识库…</div>
+      <section id="login-panel" class="agent-login" aria-labelledby="login-title">
+        <div><span class="pill">PRIVATE WORKSPACE</span><h2 id="login-title">登录你的私人知识库</h2><p>资料按账号隔离，仅在登录后展示。<br>管理员创建账号后，即可上传资料和提问。</p></div>
+        <form id="login-form"><label>邮箱<input id="login-email" type="email" autocomplete="username" required maxlength="254" placeholder="你的知识库账号邮箱"></label><label>密码<input id="login-password" type="password" autocomplete="current-password" required maxlength="256" placeholder="输入密码"></label><button id="login-button" class="primary-button" type="submit">登录知识库 ↗</button><p id="login-error" class="agent-error" role="alert"></p></form>
+      </section>
+      <section id="agent-workspace" class="agent-workspace" hidden>
+        <aside class="knowledge-panel" aria-label="我的资料">
+          <div class="knowledge-heading"><h2>我的资料</h2><span id="document-count">0 份</span></div>
+          <form id="upload-form" class="upload-form">
+            <label class="file-picker">＋ 添加文档、图片或视频<input id="knowledge-file" type="file" accept=".pdf,.docx,.txt,.md,.csv,.jpg,.jpeg,.png,.webp,.mp4,.webm" required></label>
+            <span id="selected-file" class="file-hint">每份最多 20 MB，图片最多 8 MB</span>
+            <label>资料名称<input id="document-title" maxlength="200" placeholder="默认使用文件名"></label>
+            <label>资料说明 / 视频字幕<textarea id="document-notes" rows="3" maxlength="20000" placeholder="可补充业务背景、图片说明或粘贴字幕"></textarea></label>
+            <button id="upload-button" class="primary-button" type="submit">上传并建立索引</button>
+            <p class="file-hint">PDF / Word / 文本、图片、MP4 / WebM。图片经 AI 分析；视频抽取最多 3 帧，不含音频。分析资料会发送给模型服务。</p>
+            <p id="upload-status" class="upload-status" role="status"></p>
+          </form>
+          <div id="document-list" class="document-list"></div>
+        </aside>
+        <section class="chat-panel" aria-label="资料问答">
+          <div class="chat-heading"><div><span class="agent-spark">✧</span><strong>知识问答 Agent</strong><span class="agent-tag">带来源回答</span></div><button id="clear-chat" class="text-button">新对话</button></div>
+          <div id="chat-messages" class="chat-messages" role="log" aria-live="polite">
+            <div id="chat-welcome" class="chat-welcome"><span>✧</span><h2>从一个好问题开始</h2><p>先把资料加入左侧知识库，再问业务规则、分析差异、梳理流程。回答会附引用，找不到依据时会明确说明。</p><div class="question-ideas"><button type="button" data-question="请根据知识库资料，梳理关键流程及需要注意的风险。">梳理流程与风险 ↗</button><button type="button" data-question="请对比知识库中相关方案的差异，并列出各自依据。">对比资料与方案 ↗</button></div></div>
+          </div>
+          <form id="chat-form" class="chat-form"><label class="sr-only" for="question">向知识库提问</label><textarea id="question" rows="3" maxlength="3000" placeholder="输入你的问题，例如：这两份方案有什么差异？" required></textarea><div class="chat-form-bottom"><span>仅检索自己的资料 · 请核对重要结论与原始依据</span><button id="ask-button" type="submit" class="primary-button">发送问题 ↗</button></div><p id="chat-error" class="agent-error" role="alert"></p></form>
+        </section>
+      </section>
+    </main>
+  </div>
+  <dialog id="media-dialog"><div class="dialog-heading"><h2 id="media-title">资料原文</h2><button id="close-media" class="icon-button" aria-label="关闭预览">×</button></div><div id="media-body"></div><p class="file-hint">私有资料临时链接，5 分钟后失效。请勿转发给无权查看的人。</p></dialog>
+</body></html>

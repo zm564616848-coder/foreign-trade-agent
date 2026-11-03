@@ -81,4 +81,6 @@ document.querySelectorAll('[data-category]').forEach(button => button.addEventLi
 $('#help-button').onclick = () => $('#help-dialog').showModal();
 $('#close-help').onclick = () => $('#help-dialog').close();
 render();
+// GitHub Pages is static; the private Agent needs the existing Node service.
+if(location.hostname.endsWith('.github.io')) $('#agent-nav').href='https://foreign-trade-agent.onrender.com/agent.html';
 if (storageBroken) notify('收藏读取失败，本次可继续浏览网站');

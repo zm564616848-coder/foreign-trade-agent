@@ -5,10 +5,17 @@
   "type": "module",
   "description": "统一物流查询工作台",
   "scripts": {
+    "precheck": "node scripts/ensure-dependencies.js",
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "node --test",
-    "check": "node --check server.js && node --check tracking.js && node --check public/app.js && node --check public/carriers.js && node --check public/submit-query.js"
+    "check": "node --check server.js && node --check tracking.js && node --check knowledge.js && node --check agent-routes.js && node --check public/agent.js && node --check public/app.js && node --check public/carriers.js && node --check public/submit-query.js"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "mammoth": "1.13.0",
+    "pdf-parse": "2.4.5"
+  }
 }
