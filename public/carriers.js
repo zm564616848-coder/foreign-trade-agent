@@ -22,10 +22,10 @@ export const carriers = [
 ].map(([id, name, english, category, url, mark, color]) => ({ id, name, english, category, url, mark, color }));
 
 export const websiteVerification = {
-  jimi: { identity: false, note: '原查询页可访问，集米品牌归属待核验；单号查询使用 17TRACK' },
-  tongzhi: { identity: true, note: '同智官网已核验；单号查询使用 HTTPS 17TRACK，免 HTTP 表单确认' },
-  shida: { identity: true, note: '原站显示广州世拓；查询页被网站防护拦截，查询使用 17TRACK' },
-  meite: { identity: false, note: '原网址为 8BAMI 托管查询页，美特归属待核验；查询使用 17TRACK' }
+  jimi: { identity: false, note: '原页面可访问，集米品牌归属待核验' },
+  tongzhi: { identity: true, note: '同智官网已核验，原网站使用 HTTP' },
+  shida: { identity: true, note: '原站显示广州世拓；部分页面被网站防护拦截' },
+  meite: { identity: false, note: '原网址为 8BAMI 托管页面，美特品牌归属待核验' }
 };
 
 export function filterCarriers({ query = '', category = 'all', favorites = null } = {}) {

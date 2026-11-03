@@ -52,7 +52,7 @@ test('server delivers application, health, security headers and proper errors', 
   const base = `http://127.0.0.1:${server.address().port}`;
   const page = await fetch(base);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /物流查询工作台/);
+  assert.match(await page.text(), /物流网站导航/);
   assert.match(page.headers.get('content-security-policy'), /script-src 'self'/);
   for (const asset of ['app.js', 'carriers.js', 'style.css']) assert.equal((await fetch(`${base}/${asset}`)).status, 200);
   assert.deepEqual(await (await fetch(`${base}/api/health`)).json(), { status: 'ok', mode: 'official-links', carriers: 19 });
